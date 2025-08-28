@@ -9,10 +9,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Loader2, X } from 'lucide-react';
+import { Plus, Search, Loader2, X, Settings } from 'lucide-react';
 import ProductList from '@/components/product-list';
 import ProductForm from '@/components/product-form';
 import DeleteProductDialog from '@/components/delete-product-dialog';
+import ManageCategoriesDialog from '@/components/manage-categories-dialog';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -22,6 +23,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -147,11 +149,18 @@ export default function Home() {
             </Button>
           )}
         </div>
-        {!isMobile && (
-          <Button onClick={handleAddProduct}>
-            <Plus className="mr-2 h-4 w-4" /> Add Product
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {!isMobile && (
+            <Button onClick={() => setIsCategoriesOpen(true)} variant="outline">
+              <Settings className="mr-2 h-4 w-4" /> Manage Categories
+            </Button>
+          )}
+          {!isMobile && (
+            <Button onClick={handleAddProduct}>
+              <Plus className="mr-2 h-4 w-4" /> Add Product
+            </Button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -167,20 +176,38 @@ export default function Home() {
       )}
 
       {isMobile && (
-        <Button
-          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
-          size="icon"
-          onClick={handleAddProduct}
-          aria-label="Add Product"
-        >
-          <Plus className="h-8 w-8" />
-        </Button>
+        <>
+          <Button
+            className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-lg"
+            size="icon"
+            onClick={() => setIsCategoriesOpen(true)}
+            aria-label="Manage Categories"
+            variant="outline"
+          >
+            <Settings className="h-7 w-7" />
+          </Button>
+          <Button
+            className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
+            size="icon"
+            onClick={handleAddProduct}
+            aria-label="Add Product"
+          >
+            <Plus className="h-8 w-8" />
+          </Button>
+        </>
       )}
 
       <ProductForm
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
         product={selectedProduct}
+        productTypes={productTypes}
+        quantityTypes={quantityTypes}
+      />
+      
+      <ManageCategoriesDialog
+        isOpen={isCategoriesOpen}
+        setIsOpen={setIsCategoriesOpen}
         productTypes={productTypes}
         quantityTypes={quantityTypes}
       />
