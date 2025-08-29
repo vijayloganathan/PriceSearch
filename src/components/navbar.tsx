@@ -18,10 +18,10 @@ export default function Navbar({ onAddProduct, onManageCategories, isMobile }: N
         <div className="flex items-center gap-2">
            {isMobile ? (
              <>
-                <Button onClick={onManageCategories} variant="ghost" size="icon">
+                <Button onClick={onManageCategories} variant="default" size="icon">
                   <Settings className="h-5 w-5" />
                 </Button>
-                <Button onClick={onAddProduct} variant="ghost" size="icon">
+                <Button onClick={onAddProduct} variant="default" size="icon">
                   <Plus className="h-5 w-5" />
                 </Button>
              </>
