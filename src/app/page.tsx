@@ -5,7 +5,6 @@ import { ref, onValue, set, push, remove } from 'firebase/database';
 import type { Product, ProductType, QuantityType } from '@/types';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +27,6 @@ export default function Home() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     const productsRef = ref(db, 'products');
@@ -149,18 +147,6 @@ export default function Home() {
             </Button>
           )}
         </div>
-        <div className="flex gap-2">
-          {!isMobile && (
-            <Button onClick={() => setIsCategoriesOpen(true)} variant="outline">
-              <Settings className="mr-2 h-4 w-4" /> Manage Categories
-            </Button>
-          )}
-          {!isMobile && (
-            <Button onClick={handleAddProduct}>
-              <Plus className="mr-2 h-4 w-4" /> Add Product
-            </Button>
-          )}
-        </div>
       </div>
 
       {isLoading ? (
@@ -173,28 +159,6 @@ export default function Home() {
           onEdit={handleEditProduct}
           onDelete={handleDeleteRequest}
         />
-      )}
-
-      {isMobile && (
-        <>
-          <Button
-            className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-lg"
-            size="icon"
-            onClick={() => setIsCategoriesOpen(true)}
-            aria-label="Manage Categories"
-            variant="outline"
-          >
-            <Settings className="h-7 w-7" />
-          </Button>
-          <Button
-            className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
-            size="icon"
-            onClick={handleAddProduct}
-            aria-label="Add Product"
-          >
-            <Plus className="h-8 w-8" />
-          </Button>
-        </>
       )}
 
       <ProductForm
