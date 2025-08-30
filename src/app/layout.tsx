@@ -1,13 +1,17 @@
+
 "use client";
 
+import React, { useState, useEffect } from 'react';
 import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import Navbar from '@/components/navbar';
 import './globals.css';
-import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ProductForm from '@/components/product-form';
 import ManageCategoriesDialog from '@/components/manage-categories-dialog';
+import { onValue, ref } from 'firebase/database';
+import { db } from '@/lib/firebase';
+import type { ProductType, QuantityType } from '@/types';
 
 // Note: Metadata is not supported in client components.
 // If you need to set metadata, you'll need to move this to a server component.
@@ -20,6 +24,39 @@ export default function RootLayout({
   const isMobile = useIsMobile();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
+  const [quantityTypes, setQuantityTypes] = useState<QuantityType[]>([]);
+
+  useEffect(() => {
+    const typesRef = ref(db, 'productTypes');
+    const unsubscribeTypes = onValue(typesRef, (snapshot) => {
+      const data = snapshot.val();
+      const loadedTypes: ProductType[] = data
+        ? Object.entries(data).map(([key, value]) => ({
+            id: key,
+            ...(value as Omit<ProductType, 'id'>),
+          }))
+        : [];
+      setProductTypes(loadedTypes);
+    });
+    
+    const quantityTypesRef = ref(db, 'quantityTypes');
+    const unsubscribeQuantityTypes = onValue(quantityTypesRef, (snapshot) => {
+      const data = snapshot.val();
+      const loadedQuantityTypes: QuantityType[] = data
+        ? Object.entries(data).map(([key, value]) => ({
+            id: key,
+            ...(value as Omit<QuantityType, 'id'>),
+          }))
+        : [];
+      setQuantityTypes(loadedQuantityTypes);
+    });
+
+    return () => {
+      unsubscribeTypes();
+      unsubscribeQuantityTypes();
+    };
+  }, []);
 
   const handleAddProduct = () => {
     // We'll need to pass a setter for the selected product if we want to edit from here.
@@ -48,7 +85,18 @@ export default function RootLayout({
             onManageCategories={handleManageCategories}
           />
           <main className="flex-1">
-            {children}
+            {React.Children.map(children, child => {
+              if (React.isValidElement(child)) {
+                return React.cloneElement(child as React.ReactElement<any>, { 
+                    productTypes, 
+                    quantityTypes,
+                    // Pass the setters to the page component
+                    setIsFormOpen,
+                    setIsCategoriesOpen,
+                 });
+              }
+              return child;
+            })}
           </main>
         </div>
         <Toaster />
@@ -58,15 +106,15 @@ export default function RootLayout({
           isOpen={isFormOpen}
           setIsOpen={setIsFormOpen}
           product={null} // Simplified: Add-only from navbar
-          productTypes={[]} // These need to be fetched or passed down
-          quantityTypes={[]} // These need to be fetched or passed down
+          productTypes={productTypes}
+          quantityTypes={quantityTypes}
         />
       
         <ManageCategoriesDialog
             isOpen={isCategoriesOpen}
             setIsOpen={setIsCategoriesOpen}
-            productTypes={[]} // These need to be fetched or passed down
-            quantityTypes={[]} // These need to be fetched or passed down
+            productTypes={productTypes}
+            quantityTypes={quantityTypes}
         />
       </body>
     </html>

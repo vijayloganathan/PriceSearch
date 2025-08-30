@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -14,13 +15,19 @@ import ProductForm from '@/components/product-form';
 import DeleteProductDialog from '@/components/delete-product-dialog';
 import ManageCategoriesDialog from '@/components/manage-categories-dialog';
 
-export default function Home() {
+interface HomeProps {
+    productTypes: ProductType[];
+    quantityTypes: QuantityType[];
+    setIsFormOpen: (open: boolean) => void;
+    setIsCategoriesOpen: (open: boolean) => void;
+}
+
+export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFormOpenFromLayout, setIsCategoriesOpen: setCategoriesOpenFromLayout }: HomeProps) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
-  const [quantityTypes, setQuantityTypes] = useState<QuantityType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  // This local state is now for page-level triggers only (e.g. edit)
+  const [isFormOpen, setIsFormOpen] = useState(false); 
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -41,35 +48,9 @@ export default function Home() {
       setProducts(loadedProducts);
       setIsLoading(false);
     });
-
-    const typesRef = ref(db, 'productTypes');
-    const unsubscribeTypes = onValue(typesRef, (snapshot) => {
-      const data = snapshot.val();
-      const loadedTypes: ProductType[] = data
-        ? Object.entries(data).map(([key, value]) => ({
-            id: key,
-            ...(value as Omit<ProductType, 'id'>),
-          }))
-        : [];
-      setProductTypes(loadedTypes);
-    });
     
-    const quantityTypesRef = ref(db, 'quantityTypes');
-    const unsubscribeQuantityTypes = onValue(quantityTypesRef, (snapshot) => {
-      const data = snapshot.val();
-      const loadedQuantityTypes: QuantityType[] = data
-        ? Object.entries(data).map(([key, value]) => ({
-            id: key,
-            ...(value as Omit<QuantityType, 'id'>),
-          }))
-        : [];
-      setQuantityTypes(loadedQuantityTypes);
-    });
-
     return () => {
       unsubscribeProducts();
-      unsubscribeTypes();
-      unsubscribeQuantityTypes();
     };
   }, []);
 
@@ -84,14 +65,10 @@ export default function Home() {
     );
   }, [products, searchQuery]);
 
-  const handleAddProduct = () => {
-    setSelectedProduct(null);
-    setIsFormOpen(true);
-  };
-
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
-    setIsFormOpen(true);
+    // Use the layout's setter which will open the dialog in the layout
+    setFormOpenFromLayout(true);
   };
 
   const handleDeleteRequest = (product: Product) => {
@@ -123,6 +100,13 @@ export default function Home() {
     setSearchQuery('');
     searchInputRef.current?.focus();
   };
+
+  const handleSetFormOpen = (open: boolean) => {
+    setFormOpenFromLayout(open);
+    if (!open) {
+        setSelectedProduct(null);
+    }
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -161,21 +145,31 @@ export default function Home() {
         />
       )}
 
+      {/* The ProductForm in the layout handles both add and edit now.
+          We need to pass the selected product to the layout or a shared state.
+          For now, let's assume the layout's ProductForm is modified to accept a product.
+          This local form instance might be removable if all state is hoisted.
+          To make `handleEditProduct` work, we need to lift `selectedProduct` state up.
+       */}
+      
+      {/* This instance is no longer strictly necessary if the layout handles it,
+          but we need to pass the selected product up. Let's modify the form in the layout.
+          For edit to work, the `ProductForm` in layout needs access to `selectedProduct`.
+          A simple way is to manage `selectedProduct` state here and pass it to layout.
+          But layout can't easily receive props from a page.
+          Let's lift state to a context or use a library. Or, simplify for now.
+          The simplest fix is to keep the edit form local to the page, and add form in the layout.
+      */}
+
+      {/* The form in layout handles Add. This form will handle Edit. */}
       <ProductForm
         isOpen={isFormOpen}
-        setIsOpen={setIsFormOpen}
+        setIsOpen={handleSetFormOpen}
         product={selectedProduct}
         productTypes={productTypes}
         quantityTypes={quantityTypes}
       />
       
-      <ManageCategoriesDialog
-        isOpen={isCategoriesOpen}
-        setIsOpen={setIsCategoriesOpen}
-        productTypes={productTypes}
-        quantityTypes={quantityTypes}
-      />
-
       <DeleteProductDialog
         isOpen={isDeleteAlertOpen}
         onOpenChange={setIsDeleteAlertOpen}
