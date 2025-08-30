@@ -185,7 +185,7 @@ export default function ManageCategoriesDialog({
             />
           </div>
           
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto -mx-6 px-6 py-2">
             <Accordion type="single" collapsible className="w-full" defaultValue="product-types">
                 <AccordionItem value="product-types">
                     <AccordionTrigger className="text-lg font-medium">Product Types</AccordionTrigger>
