@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ref, set, remove } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Edit, Trash2, Check, X } from 'lucide-react';
+import { Edit, Trash2, Check, X, Search } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -55,6 +55,7 @@ export default function ManageCategoriesDialog({
   productTypes,
   quantityTypes,
 }: ManageCategoriesDialogProps) {
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [editingItem, setEditingItem] = useState<ItemToEdit>(null);
   const [editedName, setEditedName] = useState('');
@@ -68,9 +69,17 @@ export default function ManageCategoriesDialog({
       setEditingItem(null);
       setItemToDelete(null);
       setEditedName('');
+      setSearchQuery('');
     }
   }, [isOpen]);
 
+  const filteredProductTypes = useMemo(() => {
+    return productTypes.filter(pt => pt.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [productTypes, searchQuery]);
+  
+  const filteredQuantityTypes = useMemo(() => {
+    return quantityTypes.filter(qt => qt.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [quantityTypes, searchQuery]);
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -121,34 +130,38 @@ export default function ManageCategoriesDialog({
 
   const renderList = (items: { id: string; name: string }[], type: 'productType' | 'quantityType') => (
     <ul className="space-y-2 pt-2">
-      {items.map((item) => {
-        const fullItem = { ...item, type };
-        return (
-          <li key={item.id}>
-             {editingItem?.id === item.id ? (
-                <div className="flex-1 flex items-center gap-2 p-2">
-                    <Input
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        className="h-8"
-                    />
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSaveEdit}><Check className="h-4 w-4" /></Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCancelEdit}><X className="h-4 w-4" /></Button>
-                </div>
-            ) : (
-                <button 
-                    className={cn(
-                        "w-full text-left p-2 rounded-md transition-colors",
-                        selectedItem?.id === item.id ? "bg-accent text-accent-foreground" : "hover:bg-muted"
-                    )}
-                    onClick={() => setSelectedItem(fullItem)}
-                >
-                    {item.name}
-                </button>
-            )}
-          </li>
-        )
-      })}
+      {items.length > 0 ? (
+        items.map((item) => {
+          const fullItem = { ...item, type };
+          return (
+            <li key={item.id}>
+               {editingItem?.id === item.id ? (
+                  <div className="flex-1 flex items-center gap-2 p-2">
+                      <Input
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                          className="h-8"
+                      />
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSaveEdit}><Check className="h-4 w-4" /></Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCancelEdit}><X className="h-4 w-4" /></Button>
+                  </div>
+              ) : (
+                  <button 
+                      className={cn(
+                          "w-full text-left p-2 rounded-md transition-colors",
+                          selectedItem?.id === item.id ? "bg-accent text-accent-foreground" : "hover:bg-muted"
+                      )}
+                      onClick={() => setSelectedItem(fullItem)}
+                  >
+                      {item.name}
+                  </button>
+              )}
+            </li>
+          )
+        })
+      ) : (
+        <li className="text-center text-muted-foreground p-4">No items found.</li>
+      )}
     </ul>
   );
 
@@ -162,19 +175,29 @@ export default function ManageCategoriesDialog({
               Select a category to edit or delete it.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+                placeholder="Search categories..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+            />
+          </div>
           
           <ScrollArea className="flex-1 -mr-6 pr-6">
             <Accordion type="single" collapsible className="w-full" defaultValue={'product-types'}>
                 <AccordionItem value="product-types">
                     <AccordionTrigger className="text-lg font-medium">Product Types</AccordionTrigger>
                     <AccordionContent>
-                        {renderList(productTypes, 'productType')}
+                        {renderList(filteredProductTypes, 'productType')}
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="quantity-types">
                     <AccordionTrigger className="text-lg font-medium">Quantity Types</AccordionTrigger>
                     <AccordionContent>
-                        {renderList(quantityTypes, 'quantityType')}
+                        {renderList(filteredQuantityTypes, 'quantityType')}
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
