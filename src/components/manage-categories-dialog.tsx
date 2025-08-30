@@ -31,7 +31,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Edit, Trash2, Check, X } from 'lucide-react';
-import { Separator } from './ui/separator';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface ManageCategoriesDialogProps {
   isOpen: boolean;
@@ -113,7 +118,7 @@ export default function ManageCategoriesDialog({
   };
 
   const renderList = (items: { id: string; name: string }[], type: 'productType' | 'quantityType') => (
-    <ul className="space-y-2">
+    <ul className="space-y-2 pt-2">
       {items.map((item) => {
         const fullItem = { ...item, type };
         return (
@@ -157,17 +162,20 @@ export default function ManageCategoriesDialog({
           </DialogHeader>
           
           <ScrollArea className="flex-1 -mr-4 pr-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Product Types</h3>
-                  {renderList(productTypes, 'productType')}
-                </div>
-                <Separator />
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Quantity Types</h3>
-                  {renderList(quantityTypes, 'quantityType')}
-                </div>
-              </div>
+            <Accordion type="multiple" className="w-full" defaultValue={['product-types']}>
+                <AccordionItem value="product-types">
+                    <AccordionTrigger className="text-lg font-medium">Product Types</AccordionTrigger>
+                    <AccordionContent>
+                        {renderList(productTypes, 'productType')}
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="quantity-types">
+                    <AccordionTrigger className="text-lg font-medium">Quantity Types</AccordionTrigger>
+                    <AccordionContent>
+                        {renderList(quantityTypes, 'quantityType')}
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
           </ScrollArea>
           
           <DialogFooter className="mt-auto pt-4 border-t sm:justify-between">
