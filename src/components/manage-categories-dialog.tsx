@@ -170,9 +170,9 @@ export default function ManageCategoriesDialog({
               </div>
           </ScrollArea>
           
-          <DialogFooter className="mt-auto pt-4 border-t">
-              {selectedItem && !editingItem && (
-                 <div className="w-full flex justify-between items-center">
+          <DialogFooter className="mt-auto pt-4 border-t sm:justify-between">
+              {selectedItem && !editingItem ? (
+                 <div className="flex items-center gap-2 justify-between w-full">
                     <p className="text-sm font-medium truncate pr-4">
                         Selected: <span className="text-primary">{selectedItem.name}</span>
                     </p>
@@ -181,14 +181,11 @@ export default function ManageCategoriesDialog({
                         <Button variant="destructive" size="icon" onClick={handleDeleteClick}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                 </div>
-              )}
-               {(!selectedItem || editingItem) && (
-                 <div className="w-full flex justify-end">
-                    <DialogClose asChild>
-                      <Button type="button" variant="secondary">Close</Button>
-                    </DialogClose>
-                 </div>
-               )}
+              ) : <div /> /* Spacer */}
+              
+              <DialogClose asChild>
+                  <Button type="button" variant={selectedItem && !editingItem ? "outline" : "secondary"}>Close</Button>
+              </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
