@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -39,7 +40,7 @@ export default function ProductTypeCombobox({ productTypes, value, onChange }: P
   const isMobile = useIsMobile();
   
   const options = React.useMemo(() => {
-    const existingTypes = productTypes.map(pt => pt.name).filter(Boolean);
+    const existingTypes = [...new Set(productTypes.map(pt => pt.name).filter(Boolean))];
     if (!existingTypes.find(t => t.toLowerCase() === 'other')) {
        return [...existingTypes, 'Other'].sort();
     }
