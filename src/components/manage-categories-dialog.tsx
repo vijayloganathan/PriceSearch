@@ -170,23 +170,23 @@ export default function ManageCategoriesDialog({
               </div>
           </ScrollArea>
           
-          <DialogFooter className="mt-auto pt-4 border-t flex-col sm:flex-row sm:justify-between gap-2">
-            <div className="flex-1 flex items-center justify-between sm:justify-start gap-2">
+          <DialogFooter className="mt-auto pt-4 border-t sm:justify-between">
+            <div className="flex-1 flex items-center gap-2">
                 {selectedItem && !editingItem ? (
                     <>
-                        <p className="text-sm font-medium truncate">
+                        <p className="text-sm font-medium truncate hidden sm:block">
                             Selected: <span className="text-primary">{selectedItem.name}</span>
                         </p>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="icon" onClick={handleEditClick}><Edit className="h-4 w-4" /></Button>
-                            <Button variant="destructive" size="icon" onClick={handleDeleteClick}><Trash2 className="h-4 w-4" /></Button>
+                        <div className="flex gap-2 ml-auto">
+                            <Button variant="outline" size="sm" onClick={handleEditClick}><Edit className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Edit</span></Button>
+                            <Button variant="destructive" size="sm" onClick={handleDeleteClick}><Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Delete</span></Button>
                         </div>
                     </>
-                ) : <div className="hidden sm:block" /> /* Spacer for alignment */}
+                ) : <div /> /* Spacer */}
             </div>
             
             <DialogClose asChild>
-                <Button type="button" variant="secondary" className="w-full sm:w-auto">Close</Button>
+                <Button type="button" variant="secondary" className="w-full sm:w-auto mt-2 sm:mt-0">Close</Button>
             </DialogClose>
         </DialogFooter>
         </DialogContent>
