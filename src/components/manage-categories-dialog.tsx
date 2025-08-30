@@ -162,7 +162,7 @@ export default function ManageCategoriesDialog({
           </DialogHeader>
           
           <ScrollArea className="flex-1 -mr-4 pr-4">
-            <Accordion type="multiple" className="w-full" defaultValue={['product-types']}>
+            <Accordion type="single" collapsible className="w-full" defaultValue={'product-types'}>
                 <AccordionItem value="product-types">
                     <AccordionTrigger className="text-lg font-medium">Product Types</AccordionTrigger>
                     <AccordionContent>
