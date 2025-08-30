@@ -72,7 +72,8 @@ export default function ManageCategoriesDialog({
   }, [isOpen]);
 
 
-  const handleEditClick = () => {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!selectedItem) return;
     setEditingItem(selectedItem);
     setEditedName(selectedItem.name);
@@ -97,8 +98,9 @@ export default function ManageCategoriesDialog({
     }
   };
   
-  const handleDeleteClick = () => {
-     if (!selectedItem) return;
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedItem) return;
     setItemToDelete(selectedItem);
   };
 
@@ -153,7 +155,7 @@ export default function ManageCategoriesDialog({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md flex flex-col">
+        <DialogContent className="sm:max-w-md flex flex-col max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Manage Categories</DialogTitle>
             <DialogDescription>
@@ -161,7 +163,7 @@ export default function ManageCategoriesDialog({
             </DialogDescription>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 -mr-4 pr-4">
+          <ScrollArea className="flex-1 -mr-6 pr-6">
             <Accordion type="single" collapsible className="w-full" defaultValue={'product-types'}>
                 <AccordionItem value="product-types">
                     <AccordionTrigger className="text-lg font-medium">Product Types</AccordionTrigger>
@@ -179,7 +181,7 @@ export default function ManageCategoriesDialog({
           </ScrollArea>
           
           <DialogFooter className="mt-auto pt-4 border-t sm:justify-between">
-            <div className="flex-1 flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2 min-h-[36px]">
                 {selectedItem && !editingItem ? (
                     <>
                         <p className="text-sm font-medium truncate hidden sm:block">
