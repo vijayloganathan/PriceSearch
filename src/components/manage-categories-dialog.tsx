@@ -63,7 +63,6 @@ export default function ManageCategoriesDialog({
   const { toast } = useToast();
 
   useEffect(() => {
-    // Reset states when dialog is closed or opened
     if (!isOpen) {
       setSelectedItem(null);
       setEditingItem(null);
@@ -101,7 +100,7 @@ export default function ManageCategoriesDialog({
       await set(ref(db, `${dbPath}/${editingItem.id}`), { name: editedName.trim() });
       toast({ title: 'Success', description: 'Item updated successfully.' });
       handleCancelEdit();
-      setSelectedItem(null); // Deselect after saving
+      setSelectedItem(null); 
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update item.' });
     }
@@ -124,7 +123,7 @@ export default function ManageCategoriesDialog({
        toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete item.' });
     } finally {
         setItemToDelete(null);
-        setSelectedItem(null); // Deselect after deleting
+        setSelectedItem(null);
     }
   };
 
@@ -186,22 +185,26 @@ export default function ManageCategoriesDialog({
             />
           </div>
           
-          <ScrollArea className="flex-1 -mr-6 pr-6">
-            <Accordion type="single" collapsible className="w-full" defaultValue={'product-types'}>
+          <div className="flex-1 min-h-0">
+            <Accordion type="single" collapsible className="w-full" defaultValue="product-types">
                 <AccordionItem value="product-types">
                     <AccordionTrigger className="text-lg font-medium">Product Types</AccordionTrigger>
                     <AccordionContent>
+                      <ScrollArea className="h-48">
                         {renderList(filteredProductTypes, 'productType')}
+                      </ScrollArea>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="quantity-types">
                     <AccordionTrigger className="text-lg font-medium">Quantity Types</AccordionTrigger>
                     <AccordionContent>
+                      <ScrollArea className="h-48">
                         {renderList(filteredQuantityTypes, 'quantityType')}
+                      </ScrollArea>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
-          </ScrollArea>
+          </div>
           
           <DialogFooter className="mt-auto pt-4 border-t sm:justify-between">
             <div className="flex-1 flex items-center gap-2 min-h-[36px]">
