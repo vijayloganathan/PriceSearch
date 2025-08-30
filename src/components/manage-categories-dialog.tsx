@@ -170,23 +170,25 @@ export default function ManageCategoriesDialog({
               </div>
           </ScrollArea>
           
-          <DialogFooter className="mt-auto pt-4 border-t sm:justify-between">
-              {selectedItem && !editingItem ? (
-                 <div className="flex items-center gap-2 justify-between w-full">
-                    <p className="text-sm font-medium truncate pr-4">
-                        Selected: <span className="text-primary">{selectedItem.name}</span>
-                    </p>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="icon" onClick={handleEditClick}><Edit className="h-4 w-4" /></Button>
-                        <Button variant="destructive" size="icon" onClick={handleDeleteClick}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                </div>
-              ) : <div /> /* Spacer */}
-              
-              <DialogClose asChild>
-                  <Button type="button" variant={selectedItem && !editingItem ? "outline" : "secondary"}>Close</Button>
-              </DialogClose>
-          </DialogFooter>
+          <DialogFooter className="mt-auto pt-4 border-t flex-col sm:flex-row sm:justify-between gap-2">
+            <div className="flex-1 flex items-center justify-between sm:justify-start gap-2">
+                {selectedItem && !editingItem ? (
+                    <>
+                        <p className="text-sm font-medium truncate">
+                            Selected: <span className="text-primary">{selectedItem.name}</span>
+                        </p>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="icon" onClick={handleEditClick}><Edit className="h-4 w-4" /></Button>
+                            <Button variant="destructive" size="icon" onClick={handleDeleteClick}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                    </>
+                ) : <div className="hidden sm:block" /> /* Spacer for alignment */}
+            </div>
+            
+            <DialogClose asChild>
+                <Button type="button" variant="secondary" className="w-full sm:w-auto">Close</Button>
+            </DialogClose>
+        </DialogFooter>
         </DialogContent>
       </Dialog>
       
