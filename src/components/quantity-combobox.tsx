@@ -35,12 +35,12 @@ interface QuantityComboboxProps {
   onChange: (value: string) => void;
 }
 
-export default function QuantityCombobox({ quantityTypes, value, onChange }: QuantityComboboxProps) {
+export default function QuantityCombobox({ quantityTypes = [], value, onChange }: QuantityComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const isMobile = useIsMobile();
   
   const options = React.useMemo(() => {
-    const existingTypes = [...new Set(quantityTypes.map(pt => pt.name).filter(Boolean))];
+    const existingTypes = [...new Set((quantityTypes || []).map(pt => pt.name).filter(Boolean))];
     if (!existingTypes.find(t => t.toLowerCase() === 'other')) {
        return [...existingTypes, 'Other'].sort();
     }
@@ -112,15 +112,11 @@ function TypeList({
       <CommandList>
         <CommandEmpty>No quantity found.</CommandEmpty>
         <CommandGroup>
-          {options.map((option) => (
+          {options.map((option, index) => (
             <CommandItem
-              key={option}
+              key={`${option}-${index}`}
               value={option}
               onSelect={onSelect}
-              disabled={
-                option.toLowerCase() === "other" &&
-                options.filter((o) => o.toLowerCase() === "other").length > 1
-              }
             >
               <Check
                 className={cn(
