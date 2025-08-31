@@ -18,15 +18,15 @@ import ManageCategoriesDialog from '@/components/manage-categories-dialog';
 interface HomeProps {
     productTypes: ProductType[];
     quantityTypes: QuantityType[];
-    setIsFormOpen: (open: boolean) => void;
-    setIsCategoriesOpen: (open: boolean) => void;
+    // These props are passed from layout but might be undefined if not needed.
+    setIsFormOpen?: (open: boolean) => void;
+    setIsCategoriesOpen?: (open: boolean) => void;
 }
 
 export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFormOpenFromLayout, setIsCategoriesOpen: setCategoriesOpenFromLayout }: HomeProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  // This local state is now for page-level triggers only (e.g. edit)
   const [isFormOpen, setIsFormOpen] = useState(false); 
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
@@ -67,8 +67,8 @@ export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFo
 
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
-    // Use the layout's setter which will open the dialog in the layout
-    setFormOpenFromLayout(true);
+    // Use the local form state for editing on this page
+    setIsFormOpen(true);
   };
 
   const handleDeleteRequest = (product: Product) => {
@@ -102,7 +102,7 @@ export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFo
   };
 
   const handleSetFormOpen = (open: boolean) => {
-    setFormOpenFromLayout(open);
+    setIsFormOpen(open);
     if (!open) {
         setSelectedProduct(null);
     }
@@ -144,24 +144,8 @@ export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFo
           onDelete={handleDeleteRequest}
         />
       )}
-
-      {/* The ProductForm in the layout handles both add and edit now.
-          We need to pass the selected product to the layout or a shared state.
-          For now, let's assume the layout's ProductForm is modified to accept a product.
-          This local form instance might be removable if all state is hoisted.
-          To make `handleEditProduct` work, we need to lift `selectedProduct` state up.
-       */}
       
-      {/* This instance is no longer strictly necessary if the layout handles it,
-          but we need to pass the selected product up. Let's modify the form in the layout.
-          For edit to work, the `ProductForm` in layout needs access to `selectedProduct`.
-          A simple way is to manage `selectedProduct` state here and pass it to layout.
-          But layout can't easily receive props from a page.
-          Let's lift state to a context or use a library. Or, simplify for now.
-          The simplest fix is to keep the edit form local to the page, and add form in the layout.
-      */}
-
-      {/* The form in layout handles Add. This form will handle Edit. */}
+      {/* This form is controlled by the page's local state for editing */}
       <ProductForm
         isOpen={isFormOpen}
         setIsOpen={handleSetFormOpen}
