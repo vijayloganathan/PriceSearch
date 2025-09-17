@@ -45,6 +45,14 @@ export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFo
             ...(value as Omit<Product, 'id'>),
           }))
         : [];
+      
+      // Sort products by productId
+      loadedProducts.sort((a, b) => {
+        if (!a.productId) return 1;
+        if (!b.productId) return -1;
+        return a.productId.localeCompare(b.productId);
+      });
+
       setProducts(loadedProducts);
       setIsLoading(false);
     });
