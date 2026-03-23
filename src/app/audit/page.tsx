@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ref, onValue } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import type { AuditRecord } from '@/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
@@ -18,12 +18,23 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, History, ArrowLeft } from 'lucide-react';
+import { Loader2, History, ArrowLeft, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function AuditPage() {
   const [audits, setAudits] = useState<AuditRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionFilter, setActionFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const auditsRef = ref(db, 'audits');
@@ -45,6 +56,19 @@ export default function AuditPage() {
     return () => unsubscribe();
   }, []);
 
+  const uniqueTypes = useMemo(() => {
+    const types = new Set(audits.map(a => a.productType).filter(Boolean));
+    return Array.from(types).sort();
+  }, [audits]);
+
+  const filteredAudits = useMemo(() => {
+    return audits.filter(audit => {
+      const matchAction = actionFilter === 'all' || audit.action === actionFilter;
+      const matchType = typeFilter === 'all' || audit.productType === typeFilter;
+      return matchAction && matchType;
+    });
+  }, [audits, actionFilter, typeFilter]);
+
   const getBadgeVariant = (action: string) => {
     switch (action) {
       case 'create': return 'default';
@@ -62,40 +86,123 @@ export default function AuditPage() {
     return String(value);
   };
 
+  const resetFilters = () => {
+    setActionFilter('all');
+    setTypeFilter('all');
+  };
+
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
-          <p className="text-muted-foreground">Detailed history of all product activities.</p>
+      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
+            <p className="text-muted-foreground">Detailed history of all product activities.</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg">
+            <Filter className="h-4 w-4 ml-2 text-muted-foreground" />
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger className="w-[130px] h-8 border-0 bg-transparent focus:ring-0">
+                <SelectValue placeholder="Action" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Actions</SelectItem>
+                <SelectItem value="create">Create</SelectItem>
+                <SelectItem value="update">Update</SelectItem>
+                <SelectItem value="delete">Delete</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[150px] h-8 border-0 bg-transparent focus:ring-0">
+                <SelectValue placeholder="Product Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {uniqueTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {(actionFilter !== 'all' || typeFilter !== 'all') && (
+              <Button variant="ghost" size="icon" onClick={resetFilters} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <History className="h-5 w-5 text-primary" />
-            <CardTitle>Change History</CardTitle>
-          </div>
-          <CardDescription>
-            A record of creations, updates, and deletions.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : audits.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">
-              No audit records found.
-            </div>
-          ) : (
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : filteredAudits.length === 0 ? (
+        <Card className="p-20 text-center text-muted-foreground">
+          No audit records found matching your filters.
+        </Card>
+      ) : isMobile ? (
+        <div className="space-y-4">
+          {filteredAudits.map((audit) => (
+            <Card key={audit.id} className="overflow-hidden">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="space-y-1">
+                    <CardTitle className="text-base">{audit.productName}</CardTitle>
+                    <CardDescription className="text-xs flex flex-wrap gap-x-2">
+                      <span className="font-mono text-primary/70">{audit.productId || 'No ID'}</span>
+                      <span>•</span>
+                      <span>{audit.productType}</span>
+                    </CardDescription>
+                  </div>
+                  <Badge variant={getBadgeVariant(audit.action)} className="uppercase text-[10px]">
+                    {audit.action}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 space-y-3">
+                <div className="text-[10px] text-muted-foreground font-mono">
+                  {format(audit.timestamp, 'dd MMM yyyy, HH:mm:ss')}
+                </div>
+                
+                <div className="bg-muted/30 rounded-md p-2 space-y-1.5">
+                  {audit.action === 'create' && (
+                    <span className="text-xs italic text-muted-foreground">New product added to inventory</span>
+                  )}
+                  {audit.action === 'delete' && (
+                    <span className="text-xs italic text-muted-foreground">Product removed from system</span>
+                  )}
+                  {audit.action === 'update' && (audit.changes || []).length > 0 ? (
+                    audit.changes?.map((change, i) => (
+                      <div key={i} className="text-xs grid grid-cols-[80px_1fr] gap-2 border-b border-border/20 last:border-0 pb-1 last:pb-0">
+                        <span className="font-semibold text-foreground/60">{change.field}:</span>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="text-muted-foreground line-through decoration-destructive/30">{formatValue(change.field, change.oldValue)}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-primary font-bold">{formatValue(change.field, change.newValue)}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : audit.action === 'update' && (
+                    <span className="text-xs italic text-muted-foreground">Updated without field changes</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -109,7 +216,7 @@ export default function AuditPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {audits.map((audit) => (
+                  {filteredAudits.map((audit) => (
                     <TableRow key={audit.id}>
                       <TableCell className="whitespace-nowrap text-xs font-mono">
                         {format(audit.timestamp, 'dd/MM HH:mm:ss')}
@@ -149,9 +256,9 @@ export default function AuditPage() {
                 </TableBody>
               </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
