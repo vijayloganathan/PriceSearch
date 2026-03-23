@@ -1,20 +1,16 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import Navbar from '@/components/navbar';
 import './globals.css';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ProductForm from '@/components/product-form';
 import ManageCategoriesDialog from '@/components/manage-categories-dialog';
+import AuditLogDialog from '@/components/audit-log-dialog';
 import { onValue, ref } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import type { ProductType, QuantityType } from '@/types';
-
-// Note: Metadata is not supported in client components.
-// If you need to set metadata, you'll need to move this to a server component.
 
 export default function RootLayout({
   children,
@@ -24,6 +20,7 @@ export default function RootLayout({
   const isMobile = useIsMobile();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isAuditOpen, setIsAuditOpen] = useState(false);
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [quantityTypes, setQuantityTypes] = useState<QuantityType[]>([]);
 
@@ -59,13 +56,15 @@ export default function RootLayout({
   }, []);
 
   const handleAddProduct = () => {
-    // We'll need to pass a setter for the selected product if we want to edit from here.
-    // For now, it only handles adding.
     setIsFormOpen(true);
   };
 
   const handleManageCategories = () => {
     setIsCategoriesOpen(true);
+  };
+
+  const handleShowAudit = () => {
+    setIsAuditOpen(true);
   };
   
   return (
@@ -83,6 +82,7 @@ export default function RootLayout({
             isMobile={isMobile}
             onAddProduct={handleAddProduct}
             onManageCategories={handleManageCategories}
+            onShowAudit={handleShowAudit}
           />
           <main className="flex-1">
             {React.Children.map(children, child => {
@@ -90,7 +90,6 @@ export default function RootLayout({
                 return React.cloneElement(child as React.ReactElement<any>, { 
                     productTypes, 
                     quantityTypes,
-                    // Pass the setters to the page component
                     setIsFormOpen,
                     setIsCategoriesOpen,
                  });
@@ -101,11 +100,10 @@ export default function RootLayout({
         </div>
         <Toaster />
 
-        {/* These dialogs are now controlled from the layout to be accessible from the Navbar */}
         <ProductForm
           isOpen={isFormOpen}
           setIsOpen={setIsFormOpen}
-          product={null} // Simplified: Add-only from navbar
+          product={null}
           productTypes={productTypes}
           quantityTypes={quantityTypes}
         />
@@ -115,6 +113,11 @@ export default function RootLayout({
             setIsOpen={setIsCategoriesOpen}
             productTypes={productTypes}
             quantityTypes={quantityTypes}
+        />
+
+        <AuditLogDialog
+          isOpen={isAuditOpen}
+          onOpenChange={setIsAuditOpen}
         />
       </body>
     </html>

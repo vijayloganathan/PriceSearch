@@ -1,35 +1,31 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { ref, onValue, set, push, remove } from 'firebase/database';
-import type { Product, ProductType, QuantityType } from '@/types';
+import type { Product, ProductType, QuantityType, AuditRecord } from '@/types';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Loader2, X, Settings } from 'lucide-react';
+import { Search, Loader2, X } from 'lucide-react';
 import ProductList from '@/components/product-list';
 import ProductForm from '@/components/product-form';
 import DeleteProductDialog from '@/components/delete-product-dialog';
-import ManageCategoriesDialog from '@/components/manage-categories-dialog';
 
 interface HomeProps {
     productTypes: ProductType[];
     quantityTypes: QuantityType[];
-    // These props are passed from layout but might be undefined if not needed.
     setIsFormOpen?: (open: boolean) => void;
     setIsCategoriesOpen?: (open: boolean) => void;
 }
 
-export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFormOpenFromLayout, setIsCategoriesOpen: setCategoriesOpenFromLayout }: HomeProps) {
+export default function Home({ productTypes, quantityTypes }: HomeProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false); 
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,11 +42,11 @@ export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFo
           }))
         : [];
       
-      // Sort products by productId
+      // Sort products by productId wise
       loadedProducts.sort((a, b) => {
-        if (!a.productId) return 1;
-        if (!b.productId) return -1;
-        return a.productId.localeCompare(b.productId);
+        const idA = a.productId || '';
+        const idB = b.productId || '';
+        return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
       });
 
       setProducts(loadedProducts);
@@ -75,7 +71,6 @@ export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFo
 
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
-    // Use the local form state for editing on this page
     setIsFormOpen(true);
   };
 
@@ -87,6 +82,18 @@ export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFo
   const handleConfirmDelete = async () => {
     if (!selectedProduct) return;
     try {
+      // Record Audit before delete
+      const auditsRef = ref(db, 'audits');
+      const newAuditRef = push(auditsRef);
+      const audit: Omit<AuditRecord, 'id'> = {
+        productId: selectedProduct.productId || 'N/A',
+        productName: selectedProduct.name,
+        productType: selectedProduct.type,
+        action: 'delete',
+        timestamp: Date.now(),
+      };
+      await set(newAuditRef, audit);
+
       await remove(ref(db, `products/${selectedProduct.id}`));
       toast({
         title: 'Success',
@@ -153,7 +160,6 @@ export default function Home({ productTypes, quantityTypes, setIsFormOpen: setFo
         />
       )}
       
-      {/* This form is controlled by the page's local state for editing */}
       <ProductForm
         isOpen={isFormOpen}
         setIsOpen={handleSetFormOpen}

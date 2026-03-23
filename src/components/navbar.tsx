@@ -1,13 +1,14 @@
-import { Package, Plus, Settings } from 'lucide-react';
+import { Package, Plus, Settings, History } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface NavbarProps {
   onAddProduct?: () => void;
   onManageCategories?: () => void;
+  onShowAudit?: () => void;
   isMobile: boolean;
 }
 
-export default function Navbar({ onAddProduct, onManageCategories, isMobile }: NavbarProps) {
+export default function Navbar({ onAddProduct, onManageCategories, onShowAudit, isMobile }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
@@ -18,7 +19,10 @@ export default function Navbar({ onAddProduct, onManageCategories, isMobile }: N
         <div className="flex items-center gap-2">
            {isMobile ? (
              <>
-                <Button onClick={onManageCategories} variant="default" size="icon">
+                <Button onClick={onShowAudit} variant="outline" size="icon">
+                  <History className="h-5 w-5" />
+                </Button>
+                <Button onClick={onManageCategories} variant="outline" size="icon">
                   <Settings className="h-5 w-5" />
                 </Button>
                 <Button onClick={onAddProduct} variant="default" size="icon">
@@ -27,10 +31,13 @@ export default function Navbar({ onAddProduct, onManageCategories, isMobile }: N
              </>
            ) : (
             <>
-              <Button onClick={onManageCategories} variant="outline">
-                <Settings className="mr-2 h-4 w-4" /> Manage Categories
+              <Button onClick={onShowAudit} variant="ghost" size="sm">
+                <History className="mr-2 h-4 w-4" /> Audit
               </Button>
-              <Button onClick={onAddProduct}>
+              <Button onClick={onManageCategories} variant="outline" size="sm">
+                <Settings className="mr-2 h-4 w-4" /> Categories
+              </Button>
+              <Button onClick={onAddProduct} size="sm">
                 <Plus className="mr-2 h-4 w-4" /> Add Product
               </Button>
             </>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -8,7 +7,7 @@ import * as z from 'zod';
 import { ref, set, push } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import type { Product, ProductType, QuantityType } from '@/types';
+import type { Product, ProductType, QuantityType, AuditRecord } from '@/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -77,11 +76,7 @@ export default function ProductForm({ isOpen, setIsOpen, product, productTypes, 
   useEffect(() => {
     if (product) {
       form.reset(product);
-      if (product.type === 'Other') {
-        setShowNewTypeInput(true);
-      } else {
-        setShowNewTypeInput(false);
-      }
+      setShowNewTypeInput(false);
       setShowNewQuantityInput(false);
     } else {
       form.reset({
@@ -120,6 +115,44 @@ export default function ProductForm({ isOpen, setIsOpen, product, productTypes, 
     }
   }
 
+  const recordAudit = (action: 'create' | 'update', data: ProductFormValues, oldData?: Product | null) => {
+    const auditsRef = ref(db, 'audits');
+    const newAuditRef = push(auditsRef);
+    
+    const audit: Omit<AuditRecord, 'id'> = {
+      productId: data.productId || 'N/A',
+      productName: data.name,
+      productType: data.type,
+      action,
+      timestamp: Date.now(),
+    };
+
+    if (action === 'update' && oldData) {
+      const changes: AuditRecord['changes'] = [];
+      const fields = ['productId', 'name', 'type', 'quantity', 'retailRate', 'wholesaleRate', 'purchaseRate'] as const;
+      
+      fields.forEach(field => {
+        const newVal = data[field];
+        const oldVal = oldData[field];
+        if (newVal !== oldVal) {
+          changes.push({
+            field,
+            oldValue: oldVal === undefined ? '' : oldVal,
+            newValue: newVal === undefined ? '' : newVal,
+          });
+        }
+      });
+      
+      if (changes.length > 0) {
+        audit.changes = changes;
+      } else {
+        return; // No actual changes
+      }
+    }
+
+    set(newAuditRef, audit);
+  };
+
   const onSubmit = async (values: ProductFormValues) => {
     setIsSubmitting(true);
     let finalValues = { ...values };
@@ -153,6 +186,9 @@ export default function ProductForm({ isOpen, setIsOpen, product, productTypes, 
 
       const productRef = product ? ref(db, `products/${product.id}`) : push(ref(db, 'products'));
       await set(productRef, finalValues);
+
+      // Record Audit
+      recordAudit(product ? 'update' : 'create', finalValues, product);
 
       toast({
         title: 'Success!',
@@ -265,7 +301,7 @@ export default function ProductForm({ isOpen, setIsOpen, product, productTypes, 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Purchase Rate</FormLabel>
-                      <FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl>
+                      <FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -276,7 +312,7 @@ export default function ProductForm({ isOpen, setIsOpen, product, productTypes, 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Retail Rate</FormLabel>
-                      <FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl>
+                      <FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -287,7 +323,7 @@ export default function ProductForm({ isOpen, setIsOpen, product, productTypes, 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Wholesale Rate</FormLabel>
-                      <FormControl><Input type="number" placeholder="0.00" {...field} /></FormControl>
+                      <FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

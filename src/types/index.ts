@@ -18,3 +18,17 @@ export interface QuantityType {
   id: string; // Firebase key
   name: string;
 }
+
+export interface AuditRecord {
+  id: string;
+  productId: string;
+  productName: string;
+  productType: string;
+  action: 'create' | 'update' | 'delete';
+  changes?: {
+    field: string;
+    oldValue: any;
+    newValue: any;
+  }[];
+  timestamp: number;
+}
