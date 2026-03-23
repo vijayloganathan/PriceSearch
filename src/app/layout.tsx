@@ -7,7 +7,6 @@ import './globals.css';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ProductForm from '@/components/product-form';
 import ManageCategoriesDialog from '@/components/manage-categories-dialog';
-import AuditLogDialog from '@/components/audit-log-dialog';
 import { onValue, ref } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import type { ProductType, QuantityType } from '@/types';
@@ -20,7 +19,6 @@ export default function RootLayout({
   const isMobile = useIsMobile();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
-  const [isAuditOpen, setIsAuditOpen] = useState(false);
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [quantityTypes, setQuantityTypes] = useState<QuantityType[]>([]);
 
@@ -63,10 +61,6 @@ export default function RootLayout({
     setIsCategoriesOpen(true);
   };
 
-  const handleShowAudit = () => {
-    setIsAuditOpen(true);
-  };
-  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -82,7 +76,6 @@ export default function RootLayout({
             isMobile={isMobile}
             onAddProduct={handleAddProduct}
             onManageCategories={handleManageCategories}
-            onShowAudit={handleShowAudit}
           />
           <main className="flex-1">
             {React.Children.map(children, child => {
@@ -113,11 +106,6 @@ export default function RootLayout({
             setIsOpen={setIsCategoriesOpen}
             productTypes={productTypes}
             quantityTypes={quantityTypes}
-        />
-
-        <AuditLogDialog
-          isOpen={isAuditOpen}
-          onOpenChange={setIsAuditOpen}
         />
       </body>
     </html>
