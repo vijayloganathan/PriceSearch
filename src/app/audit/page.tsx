@@ -18,8 +18,9 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, History, ArrowLeft, Filter, X } from 'lucide-react';
+import { Loader2, History, ArrowLeft, Filter, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ export default function AuditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionFilter, setActionFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -65,9 +67,15 @@ export default function AuditPage() {
     return audits.filter(audit => {
       const matchAction = actionFilter === 'all' || audit.action === actionFilter;
       const matchType = typeFilter === 'all' || audit.productType === typeFilter;
-      return matchAction && matchType;
+      
+      const query = searchQuery.toLowerCase();
+      const matchSearch = !query || 
+        audit.productName.toLowerCase().includes(query) || 
+        (audit.productId && audit.productId.toLowerCase().includes(query));
+
+      return matchAction && matchType && matchSearch;
     });
-  }, [audits, actionFilter, typeFilter]);
+  }, [audits, actionFilter, typeFilter, searchQuery]);
 
   const getBadgeVariant = (action: string) => {
     switch (action) {
@@ -89,6 +97,7 @@ export default function AuditPage() {
   const resetFilters = () => {
     setActionFilter('all');
     setTypeFilter('all');
+    setSearchQuery('');
   };
 
   return (
@@ -106,11 +115,31 @@ export default function AuditPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+           <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search ID or name..."
+              className="pl-9 pr-9 h-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+
           <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg">
             <Filter className="h-4 w-4 ml-2 text-muted-foreground" />
             <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger className="w-[130px] h-8 border-0 bg-transparent focus:ring-0">
+              <SelectTrigger className="w-[110px] sm:w-[130px] h-8 border-0 bg-transparent focus:ring-0">
                 <SelectValue placeholder="Action" />
               </SelectTrigger>
               <SelectContent>
@@ -122,7 +151,7 @@ export default function AuditPage() {
             </Select>
 
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[150px] h-8 border-0 bg-transparent focus:ring-0">
+              <SelectTrigger className="w-[120px] sm:w-[150px] h-8 border-0 bg-transparent focus:ring-0">
                 <SelectValue placeholder="Product Type" />
               </SelectTrigger>
               <SelectContent>
@@ -133,7 +162,7 @@ export default function AuditPage() {
               </SelectContent>
             </Select>
 
-            {(actionFilter !== 'all' || typeFilter !== 'all') && (
+            {(actionFilter !== 'all' || typeFilter !== 'all' || searchQuery !== '') && (
               <Button variant="ghost" size="icon" onClick={resetFilters} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
@@ -148,7 +177,7 @@ export default function AuditPage() {
         </div>
       ) : filteredAudits.length === 0 ? (
         <Card className="p-20 text-center text-muted-foreground">
-          No audit records found matching your filters.
+          No audit records found matching your criteria.
         </Card>
       ) : isMobile ? (
         <div className="space-y-4">
